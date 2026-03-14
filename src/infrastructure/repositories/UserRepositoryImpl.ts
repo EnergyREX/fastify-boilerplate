@@ -10,9 +10,9 @@ import { eq } from 'drizzle-orm'
 
 export class UserRepositoryImpl implements IUserRepository {
 
-    async save(user: User, verificationCode: string): Promise<Result<void, UserRepositoryError>> {
-        
-        
+    private factory = new UserFactory()
+
+    async save(user: User, verificationCode: string): Promise<Result<void, UserRepositoryError>> {        
         try {
             await db.insert(users).values({
                 uuid: user.getUUID(),
@@ -60,8 +60,7 @@ export class UserRepositoryImpl implements IUserRepository {
         try {
             const data = await db.select().from(users).where(eq(users.uuid, uuid))
 
-            const factory = new UserFactory()
-            const user = factory.create(data[0].uuid, data[0].name, data[0].email, data[0].password, data[0].verified)
+            const user = this.factory.create(data[0].uuid, data[0].name, data[0].email, data[0].password, data[0].verified)
 
             if (user) {
                 return { ok: true, value: user }
@@ -86,9 +85,8 @@ export class UserRepositoryImpl implements IUserRepository {
             if (data.length == 0) {
                 return { ok: false, error: { message: "User not found", code: "ERR_USER_NOT_FOUND" }}
             }
-
-            const factory = new UserFactory()
-            const user = factory.create(data[0].uuid, data[0].name, data[0].email, data[0].password, data[0].verified)
+            
+            const user = this.factory.create(data[0].uuid, data[0].name, data[0].email, data[0].password, data[0].verified)
 
             return { ok: true, value: user }
 
