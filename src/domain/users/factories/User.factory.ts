@@ -5,13 +5,13 @@ import { Password } from "../value-objects/Password.ts";
 
 export class UserFactory {
 
-    create(uuid: string, name: string, email: string, password: string, verified: boolean): User {
+    create(uuid: string, name: string, email: string, password: string, verified: boolean, role_id?: number): User {
         const userUUID = new UUID(uuid)
 
         const userEmail = new Email(email)
         const userPassword = new Password(password)
 
-        const user = new User(userUUID, name, userEmail, userPassword, verified) 
+        const user = new User(userUUID, name, userEmail, userPassword, verified, role_id || 0) 
 
         return user
     }

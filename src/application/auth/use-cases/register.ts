@@ -17,7 +17,7 @@ export async function register(
     
     try {
         const factory = new UserFactory()
-        const uuid = crypto.randomUUID()
+        const uuid = crypto.randomUUID().toString()
         const hashedPassword = await bcrypt.hash(password, 12)
         const user = await factory.create(uuid, name, email, hashedPassword, false)
         const verificationCode = await crypto.randomBytes(32).toString('base64url')
