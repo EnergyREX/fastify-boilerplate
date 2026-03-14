@@ -7,6 +7,7 @@ import { RefreshRequest } from "../../types/request/RefreshRequest.ts";
 import { LogoutRequest } from "../../types/request/LogoutRequest.ts"
 
 export default async function (fastify: FastifyInstance, opts: FastifyPluginOptions) {
+    
     fastify.post('/register', {
         schema: {
             summary: "Registers an user by given parameters and sends an email to its email.",
@@ -50,10 +51,10 @@ export default async function (fastify: FastifyInstance, opts: FastifyPluginOpti
                 reply.code(200).send({ 
                     success: true,
                     message: "Logged in successfully!",
+                    token: result.value.tokens.accessToken,
                     data: {
                         uuid: result.value.uuid,
                         email: result.value.email,
-                        token: result.value.tokens.accessToken
                     }
                 })
             } else {
@@ -76,7 +77,6 @@ export default async function (fastify: FastifyInstance, opts: FastifyPluginOpti
             tags: ["Auth"]
         }
     }, async (request: FastifyRequest, reply: FastifyReply) => {
-        //* ¿Por qué funciona así? wth
         const { refreshToken } = request.cookies as RefreshRequest
         const cookie = refreshToken
 
@@ -121,7 +121,7 @@ export default async function (fastify: FastifyInstance, opts: FastifyPluginOpti
         }
     });
 
-    fastify.post('/verify', {
+    fastify.get('/verify', {
         schema: {
             description: "Allow registred users to use an URL to verify their accounts",
             tags: ["Auth"]
