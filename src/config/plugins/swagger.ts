@@ -7,8 +7,8 @@ const documentation: FastifyPluginAsync = async(fastify) => {
     await fastify.register(swagger, {
         openapi: {
             info: {
-                title: 'HytaleServerHub.net API Docs',
-                description: 'API Docs for Hytale Server Hub',
+                title: 'API Docs',
+                description: 'API Docs',
                 version: '0.1.0'
             }
         }
