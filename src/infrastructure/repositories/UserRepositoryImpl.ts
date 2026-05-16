@@ -12,7 +12,7 @@ export class UserRepositoryImpl implements IUserRepository {
 
     private factory = new UserFactory()
 
-    async save(user: User, verificationCode: string): Promise<Result<void, UserRepositoryError>> {        
+    async save(user: User, verificationCode: string): Promise<Result<void, UserRepositoryError>> {                
         try {
             await db.insert(users).values({
                 uuid: user.getUUID(),
@@ -35,7 +35,7 @@ export class UserRepositoryImpl implements IUserRepository {
         const user = await db.select().from(users).where(eq(users.verificationCode, verificationCode))
 
         if (user.length > 0) {
-            await db.update(users).set({ verified: true, verificationCode: "" })
+            await db.update(users).set({ verified: true, verificationCode: "" }).where(eq(users.verificationCode, verificationCode))
             return { ok: true, value: undefined }
         } else {
             return { ok: false, error: { message: "Could not verify the user", code: "ERR_USER_NOT_FOUND" } }
@@ -101,12 +101,11 @@ export class UserRepositoryImpl implements IUserRepository {
         }
     }
 
-    
     async changeName(user: User): Promise<Result<void, UserRepositoryError>> {
         try {
             await db.update(users).set({
                 name: user.getName(),
-            }).where(eq(users.uuid, user.getUUID()))
+            }).where(eq(users.uuid, user.getUUID().toString()))
 
             return { ok: true, value: undefined }
         } catch (err) {
@@ -167,7 +166,5 @@ export class UserRepositoryImpl implements IUserRepository {
                 return { ok: false, error: { message: "Could not delete user", code: "ERR_USER_DELETE" }}
             }
         }
-
-        
     }
 } 
