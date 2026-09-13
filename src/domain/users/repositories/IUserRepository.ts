@@ -10,7 +10,7 @@ export interface IUserRepository {
     getByEmail(email: string): Promise<Result<User, UserRepositoryError>>
 
     getVerificationCode(code: string): Promise<Result<string, UserRepositoryError>> //* Useful when sending an email
-    checkRevoked(cookie: string): Promise<Result<void, UserRepositoryError>>
+    checkRevoked(cookie: string): Promise<boolean>
 
     changeName(user: User): Promise<Result<void, UserRepositoryError>> //* Only non-sensible data, such as name.. etc
     changePassword(password: string): Promise<Result<void, UserRepositoryError>>

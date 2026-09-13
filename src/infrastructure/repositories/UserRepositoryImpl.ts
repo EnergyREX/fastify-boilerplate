@@ -145,14 +145,9 @@ export class UserRepositoryImpl implements IUserRepository {
 
     }
 
-    async checkRevoked(token: string): Promise<Result<void, UserRepositoryError>> {
+    async checkRevoked(token: string): Promise<boolean> {
         const data = await db.select().from(revokedTokens).where(eq(revokedTokens.token, token))
-        
-        if (data.length > 0) {
-            return { ok: true, value: undefined  }
-        } else {
-            return { ok: false, error: { message: "Revoked token doesn't exist", code: "ERR_USER_REVOKED_TOKEN_NOT_EXIST" }}
-        }
+        return data.length > 0
     }
 
     async delete(uuid: string): Promise<Result<void, UserRepositoryError>> {
