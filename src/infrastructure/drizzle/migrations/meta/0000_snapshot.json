@@ -1,29 +1,22 @@
 {
-  "id": "8672a430-1505-405e-8b53-bbf04a9324ee",
+  "id": "d3c8ce3a-8b55-49a2-bbd6-dccbef018c67",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
-    "public.days": {
-      "name": "days",
+    "public.permissions": {
+      "name": "permissions",
       "schema": "",
       "columns": {
-        "uuid": {
-          "name": "uuid",
-          "type": "uuid",
+        "id": {
+          "name": "id",
+          "type": "serial",
           "primaryKey": true,
           "notNull": true
         },
-        "realDay": {
-          "name": "realDay",
-          "type": "date",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "now()"
-        },
-        "daily_thought": {
-          "name": "daily_thought",
-          "type": "text",
+        "name": {
+          "name": "name",
+          "type": "varchar",
           "primaryKey": false,
           "notNull": true
         }
@@ -36,27 +29,98 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.habit_instances": {
-      "name": "habit_instances",
+    "public.revoked_tokens": {
+      "name": "revoked_tokens",
       "schema": "",
       "columns": {
-        "user_uuid": {
-          "name": "user_uuid",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
+        "token": {
+          "name": "token",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true
         },
-        "habit_uuid": {
-          "name": "habit_uuid",
-          "type": "uuid",
+        "expires_at": {
+          "name": "expires_at",
+          "type": "integer",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
-        "day": {
-          "name": "day",
-          "type": "uuid",
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.roles_permissions": {
+      "name": "roles_permissions",
+      "schema": "",
+      "columns": {
+        "role_id": {
+          "name": "role_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "permission_id": {
+          "name": "permission_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "roles_permissions_role_id_roles_uuid_fk": {
+          "name": "roles_permissions_role_id_roles_uuid_fk",
+          "tableFrom": "roles_permissions",
+          "tableTo": "roles",
+          "columnsFrom": [
+            "role_id"
+          ],
+          "columnsTo": [
+            "uuid"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "roles_permissions_permission_id_permissions_id_fk": {
+          "name": "roles_permissions_permission_id_permissions_id_fk",
+          "tableFrom": "roles_permissions",
+          "tableTo": "permissions",
+          "columnsFrom": [
+            "permission_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.roles": {
+      "name": "roles",
+      "schema": "",
+      "columns": {
+        "uuid": {
+          "name": "uuid",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
         },
         "name": {
           "name": "name",
@@ -66,23 +130,41 @@
         },
         "description": {
           "name": "description",
-          "type": "text",
+          "type": "varchar",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.roles_users": {
+      "name": "roles_users",
+      "schema": "",
+      "columns": {
+        "user_uuid": {
+          "name": "user_uuid",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
         },
-        "completed": {
-          "name": "completed",
-          "type": "boolean",
+        "role_uuid": {
+          "name": "role_uuid",
+          "type": "uuid",
           "primaryKey": false,
-          "notNull": false,
-          "default": false
+          "notNull": false
         }
       },
       "indexes": {},
       "foreignKeys": {
-        "habit_instances_user_uuid_users_uuid_fk": {
-          "name": "habit_instances_user_uuid_users_uuid_fk",
-          "tableFrom": "habit_instances",
+        "roles_users_user_uuid_users_uuid_fk": {
+          "name": "roles_users_user_uuid_users_uuid_fk",
+          "tableFrom": "roles_users",
           "tableTo": "users",
           "columnsFrom": [
             "user_uuid"
@@ -93,25 +175,12 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "habit_instances_habit_uuid_habits_uuid_fk": {
-          "name": "habit_instances_habit_uuid_habits_uuid_fk",
-          "tableFrom": "habit_instances",
-          "tableTo": "habits",
+        "roles_users_role_uuid_roles_uuid_fk": {
+          "name": "roles_users_role_uuid_roles_uuid_fk",
+          "tableFrom": "roles_users",
+          "tableTo": "roles",
           "columnsFrom": [
-            "habit_uuid"
-          ],
-          "columnsTo": [
-            "uuid"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "habit_instances_day_days_uuid_fk": {
-          "name": "habit_instances_day_days_uuid_fk",
-          "tableFrom": "habit_instances",
-          "tableTo": "days",
-          "columnsFrom": [
-            "day"
+            "role_uuid"
           ],
           "columnsTo": [
             "uuid"
@@ -120,63 +189,6 @@
           "onUpdate": "no action"
         }
       },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.habits": {
-      "name": "habits",
-      "schema": "",
-      "columns": {
-        "uuid": {
-          "name": "uuid",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "name": {
-          "name": "name",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "description": {
-          "name": "description",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "repeat_every": {
-          "name": "repeat_every",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "date",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "now()"
-        },
-        "active_from": {
-          "name": "active_from",
-          "type": "date",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "now()"
-        },
-        "inactive_from": {
-          "name": "inactive_from",
-          "type": "date",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
@@ -211,6 +223,19 @@
           "primaryKey": false,
           "notNull": true
         },
+        "verification_code": {
+          "name": "verification_code",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "verified": {
+          "name": "verified",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
         "joined_at": {
           "name": "joined_at",
           "type": "date",
@@ -222,7 +247,15 @@
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "users_email_unique": {
+          "name": "users_email_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "email"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
