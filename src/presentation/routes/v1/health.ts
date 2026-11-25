@@ -1,5 +1,6 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyReply, FastifyRequest } from "fastify";
 import { testDBConnection } from "../../../config/database.ts";
+import redis from "../../../config/redis.ts";
 
 export default async function (fastify: FastifyInstance, opts: FastifyPluginOptions) {
     fastify.get('/health', {
@@ -9,18 +10,18 @@ export default async function (fastify: FastifyInstance, opts: FastifyPluginOpti
         }
     }, async (request: FastifyRequest, reply: FastifyReply) => {
         
-        /*
-        const redisStatus = await fastify.redis.ping()
-            .then(pong => pong === "PONG" ? 200 : 503)
-            .catch(() => 503);
-        */
+        // While reconnecting, ping() would be queued instead of failing, so check readiness first.
+        const redisStatus = redis.isReady
+            ? await redis.ping()
+                .then(pong => pong === "PONG" ? 200 : 503)
+                .catch(() => 503)
+            : 503;
 
         const postgresStatus = await testDBConnection()
             .then(isConnected => isConnected ? true : false)
             .catch(() => false);
 
-        // const isHealthy = redisStatus === 200 && postgresStatus === true;
-        const isHealthy = postgresStatus === true
+        const isHealthy = redisStatus === 200 && postgresStatus === true;
         const statusCode = isHealthy ? 200 : 503;
 
         reply.code(statusCode);
@@ -30,7 +31,7 @@ export default async function (fastify: FastifyInstance, opts: FastifyPluginOpti
             server: 200,
             infrastructure: {
                 postgres: postgresStatus ? 200 : 503,
-                // redis: redisStatus
+                redis: redisStatus
             }
         };
     });
