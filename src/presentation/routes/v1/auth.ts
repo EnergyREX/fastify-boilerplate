@@ -29,6 +29,7 @@ export default async function (fastify: FastifyInstance, opts: FastifyPluginOpti
     });
 
     fastify.post('/login', {
+        preHandler: [fastify.rateLimit({ max: 10, timeWindow: '20 minutes' })],
         schema: {
             description: "Allows to use the API. Sends two JWT cookies, a refresh one and an access one.",
             tags: ["Auth"]
@@ -38,7 +39,7 @@ export default async function (fastify: FastifyInstance, opts: FastifyPluginOpti
         const { email, password } = request.body as LoginRequest
 
         try {
-            const result = await container.auth.login({ email, password, fastify })
+            const result = await container.auth.login({ email, password })
 
             if (result.ok) {
                 reply.setCookie('refreshToken', result.value.tokens.refreshToken, {
@@ -72,6 +73,7 @@ export default async function (fastify: FastifyInstance, opts: FastifyPluginOpti
     });
 
     fastify.post('/refresh', {
+        preHandler: [fastify.rateLimit({ max: 10, timeWindow: '20 minutes' })],
         schema: {
             summary: "Allows to refresh a token to the user if needed.",
             tags: ["Auth"]
@@ -81,7 +83,7 @@ export default async function (fastify: FastifyInstance, opts: FastifyPluginOpti
         const cookie = refreshToken
 
         try {
-            const result = await container.auth.refresh({ cookie, fastify })
+            const result = await container.auth.refresh({ cookie })
             if (result.ok) {
                 reply.setCookie('refreshToken', result.value.refreshToken, {
                     path: '/',
@@ -99,6 +101,7 @@ export default async function (fastify: FastifyInstance, opts: FastifyPluginOpti
     });
 
     fastify.post('/logout', {
+        preHandler: [fastify.rateLimit({ max: 10, timeWindow: '20 minutes' })],
         schema: {
             description: "Allows to log out users.",
             tags: ["Auth"]
@@ -108,7 +111,7 @@ export default async function (fastify: FastifyInstance, opts: FastifyPluginOpti
         const cookie = refreshToken
 
         try {
-            const result = await container.auth.logout({ cookie, fastify })
+            const result = await container.auth.logout({ cookie })
 
             if (result.ok) {
                 reply.clearCookie('refreshToken')
@@ -130,8 +133,6 @@ export default async function (fastify: FastifyInstance, opts: FastifyPluginOpti
         const { code } = request.query as VerifyRequest
 
         const verificationCode = code
-
-        console.log(code)
 
         const result = await container.auth.verify({ code: verificationCode })
 
