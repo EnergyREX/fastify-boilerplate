@@ -1,4 +1,4 @@
-import { FastifyInstance } from "fastify";
+import { ITokenService } from "../../ports/ITokenService.ts";
 import { Result } from "../../../domain/shared/types/Result.ts";
 import { RefreshError } from "../errors/refresh.error.ts";
 import type { RefreshResult } from "../types/RefreshResult.d.ts"
@@ -8,16 +8,18 @@ import { IRoleRepository } from "../../../domain/users/repositories/IRoleReposit
 
 export async function refresh(
     cookie: string,
-    fastify: FastifyInstance,
+    tokenService: ITokenService,
     repository: IUserRepository,
     roleRepository: IRoleRepository
 ): Promise<Result<RefreshResult, RefreshError>> {
-    let result: RefreshToken;
-
-    try {
-        result = await fastify.jwt.verify(cookie) as RefreshToken;
-    } catch (err) {
+    const verified = await tokenService.verify<RefreshToken>(cookie);
+    if (!verified.ok) {
         return { ok: false, error: { message: "Cookie is not valid!", code: "ERR_AUTH_REFRESH_TOKEN" } };
+    }
+
+    const result = verified.value
+    if (result.type !== 'refresh') {
+        return { ok: false, error: { message: "This is not a refresh token!", code: "ERR_AUTH_REFRESH_NOT_A_REFRESH" } };
     }
 
     const isRevoked = await repository.checkRevoked(cookie)
@@ -35,15 +37,17 @@ export async function refresh(
     const dbUserRoles = await roleRepository.getByUserUUID(result.uuid)
     const rolesUuids = dbUserRoles.ok ? dbUserRoles.value.map((r) => r.getUUID()) : []
 
-    const refreshToken = fastify.jwt.sign({
+    const refreshToken = await tokenService.sign({
         uuid: result.uuid,
-        email: result.email
-    }, { expiresIn: "7d" });
+        email: result.email,
+        type: 'refresh'
+    }, { expiresIn: 7 * 24 * 60 * 60 });
 
-    const accessToken = fastify.jwt.sign({
+    const accessToken = await tokenService.sign({
         uuid: result.uuid,
-        roles: rolesUuids
-    }, { expiresIn: "30m" });
+        roles: rolesUuids,
+        type: 'access'
+    }, { expiresIn: 30 * 60 });
 
     return { ok: true, value: { refreshToken, accessToken } };
 }

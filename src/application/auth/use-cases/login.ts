@@ -1,7 +1,7 @@
-import bcrypt from 'bcrypt'
 import { IUserRepository } from '../../../domain/users/repositories/IUserRepository.ts'
 import { IRoleRepository } from '../../../domain/users/repositories/IRoleRepository.ts'
-import { FastifyInstance } from 'fastify'
+import { ITokenService } from '../../ports/ITokenService.ts'
+import { IPasswordHasher } from '../../ports/IPasswordHasher.ts'
 import { Result } from '../../../domain/shared/types/Result.ts'
 import { LoginError } from '../errors/login.error.ts'
 
@@ -11,15 +11,16 @@ const DUMMY_HASH = '$2b$12$2Q5P6GJRZy/Q2Mz20P1u2.3xMHSNZfv7Hz6rKKtYfBImcQ06sj7Um
 
 export async function login (
   email: string, password: string,
-  fastify: FastifyInstance,
+  tokenService: ITokenService,
   repository: IUserRepository,
-  roleRepository: IRoleRepository): Promise<Result<LoginResult, LoginError>> {
+  roleRepository: IRoleRepository,
+  hasher: IPasswordHasher): Promise<Result<LoginResult, LoginError>> {
 
   const result = await repository.getByEmail(email)
   const user = result.ok ? result.value : null
 
   const userPasswd = user ? user.getPassword() : DUMMY_HASH
-  const passwordsMatch = await bcrypt.compare(String(password), String(userPasswd))
+  const passwordsMatch = await hasher.compare(String(password), String(userPasswd))
 
   if (!user || !passwordsMatch) {
     return {
@@ -37,15 +38,17 @@ export async function login (
   const rolesUuids = dbUserRoles.ok ? dbUserRoles.value.map((r) => r.getUUID()) : []
 
   // After that, generate booth tokens and return them
-  const refreshToken = fastify.jwt.sign({
+  const refreshToken = await tokenService.sign({
     uuid: user.getUUID(),
-    email: user.getEmail()
-  }, { expiresIn: "7d" })
+    email: user.getEmail(),
+    type: 'refresh'
+  }, { expiresIn: 7 * 24 * 60 * 60 })
 
-  const accessToken = fastify.jwt.sign({
+  const accessToken = await tokenService.sign({
     uuid: user.getUUID(),
-    roles: rolesUuids
-  }, { expiresIn: "30m" })
+    roles: rolesUuids,
+    type: 'access'
+  }, { expiresIn: 30 * 60 })
 
 
   // Return response
