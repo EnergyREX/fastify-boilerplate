@@ -1,5 +1,5 @@
 {
-  "id": "d3c8ce3a-8b55-49a2-bbd6-dccbef018c67",
+  "id": "3298f10e-bb77-44ed-9848-0940b7eb39f7",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -64,9 +64,9 @@
       "name": "roles_permissions",
       "schema": "",
       "columns": {
-        "role_id": {
-          "name": "role_id",
-          "type": "integer",
+        "role_uuid": {
+          "name": "role_uuid",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
@@ -79,12 +79,12 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "roles_permissions_role_id_roles_uuid_fk": {
-          "name": "roles_permissions_role_id_roles_uuid_fk",
+        "roles_permissions_role_uuid_roles_uuid_fk": {
+          "name": "roles_permissions_role_uuid_roles_uuid_fk",
           "tableFrom": "roles_permissions",
           "tableTo": "roles",
           "columnsFrom": [
-            "role_id"
+            "role_uuid"
           ],
           "columnsTo": [
             "uuid"
