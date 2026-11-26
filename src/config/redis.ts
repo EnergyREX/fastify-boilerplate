@@ -17,4 +17,8 @@ function getConnectionString() {
 }
 const redis = createClient({ url: getConnectionString() })
 
+// Without a listener, a dropped connection is an unhandled 'error' event that kills the process.
+// The client reconnects on its own.
+redis.on('error', (err) => console.error(`[REDIS] ${err.message}`))
+
 export default redis
