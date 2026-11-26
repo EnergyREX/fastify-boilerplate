@@ -5,8 +5,14 @@ import { rolesPermissions } from '../schema/roles_permissions.ts'
 import { rolesUsers } from '../schema/users_roles.ts'
 import { users } from '../schema/users.ts'
 import { randomUUID } from "crypto"
+import bcrypt from 'bcrypt'
+import { Password } from '../../../domain/users/value-objects/Password.ts'
 
 async function seed() {
+  const adminPassword = process.env.SEED_ADMIN_PASSWORD
+  if (!adminPassword) throw new Error('[SEEDER] Define SEED_ADMIN_PASSWORD')
+  new Password(adminPassword) // throws if it doesn't meet the password policy
+
   const adminUuid = randomUUID()
   const userRoleUuid = randomUUID()
   const adminRoleUuid = randomUUID()
@@ -16,7 +22,7 @@ async function seed() {
       uuid: adminUuid,
       name: "admin",
       email: "admin@admin.com",
-      password: "1234",
+      password: await bcrypt.hash(adminPassword, 12),
       verificationCode: "",
       verified: true
     },
@@ -45,4 +51,9 @@ async function seed() {
   console.info("[SEEDER] Seeded successfully")
 }
 
-seed().then(() => process.exit(0))
+seed()
+  .then(() => process.exit(0))
+  .catch((err) => {
+    console.error(err)
+    process.exit(1)
+  })
