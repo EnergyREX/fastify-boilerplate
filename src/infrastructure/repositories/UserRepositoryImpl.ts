@@ -118,12 +118,38 @@ export class UserRepositoryImpl implements IUserRepository {
         }
     }
 
-    async changePassword(password: string): Promise<Result<void, UserRepositoryError>> {
-        return { ok: false, error: { message: "Couldn't not change password: Not implemented yet", code: "ERR_USER_NOT_IMPLEMENTED" } }
+    async changePassword(userUUID: string, newPasswordHash: string): Promise<Result<void, UserRepositoryError>> {
+        try {
+            const updated = await db.update(users)
+                .set({ password: newPasswordHash })
+                .where(eq(users.uuid, userUUID))
+                .returning({ uuid: users.uuid })
+
+            if (updated.length === 0) {
+                return { ok: false, error: { message: "User not found", code: "ERR_USER_NOT_FOUND" } }
+            }
+
+            return { ok: true, value: undefined }
+        } catch (err) {
+            return { ok: false, error: { message: err instanceof Error ? err.message : "Unknown error", code: "ERR_USER_CHANGE_PASSWORD" } }
+        }
     }
 
-    async changeEmail(email: string): Promise<Result<void, UserRepositoryError>> {
-        return { ok: false, error: { message: "Couldn't not change email: Not implemented yet", code: "ERR_USER_NOT_IMPLEMENTED" } }
+    async changeEmail(userUUID: string, newEmail: string): Promise<Result<void, UserRepositoryError>> {
+        try {
+            const updated = await db.update(users)
+                .set({ email: newEmail })
+                .where(eq(users.uuid, userUUID))
+                .returning({ uuid: users.uuid })
+
+            if (updated.length === 0) {
+                return { ok: false, error: { message: "User not found", code: "ERR_USER_NOT_FOUND" } }
+            }
+
+            return { ok: true, value: undefined }
+        } catch (err) {
+            return { ok: false, error: { message: err instanceof Error ? err.message : "Unknown error", code: "ERR_USER_CHANGE_EMAIL" } }
+        }
     }
 
     async invalidateRefresh(refresh: string, iat: number, exp: number): Promise<Result<void, UserRepositoryError>> {
